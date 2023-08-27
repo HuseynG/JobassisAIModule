@@ -91,8 +91,10 @@ app.post('/api/checkq', (req, res) => {
     if (q && q.feedback) {
         res.status(201).json({ feedback: eval(`(${q.feedback})`)});
         // res.status(201).json({ feedback: q.feedback });
+    } else if (q && !q.feedback) {
+        res.status(202).json({ message: "No feedback yet!" });
     } else {
-        res.status(400).json({ message: "No feedback yet!" });
+        res.status(400).json({ message: "Something went wrong!" });
     }
 });
 
