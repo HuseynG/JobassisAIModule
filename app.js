@@ -2,12 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
+
+const app = express();
 const cors = require('cors');
 app.use(cors({
     origin: '*'
 }));
 
-const app = express();
 const port = 8080;
 
 const OPENAI_KEY = process.env.OPENAI_KEY;
