@@ -16,11 +16,11 @@ let questions = {};
 
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.status(200).send('API is working!');
 });
 
-app.post('/sendq', async (req, res) => {
+app.post('/api/sendq', async (req, res) => {
     const { question, useranswer, userID, interview_type, seniority_level } = req.body;
 
     if (question && useranswer) {
@@ -79,7 +79,7 @@ async function req_gpt(q) {
     }
 }
 
-app.post('/checkq', (req, res) => {
+app.post('/api/checkq', (req, res) => {
     const { userID, question } = req.body;
     const q = questions[`${userID} + ${question}`];
 
