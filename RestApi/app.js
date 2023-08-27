@@ -16,17 +16,21 @@ let questions = {};
 
 app.use(bodyParser.json());
 
+app.get('/', (req, res) => {
+  res.status(200).send('API is working!');
+});
+
 app.post('/sendq', async (req, res) => {
-    const { question, useranswer, userID } = req.body;
+    const { question, useranswer, userID, interview_type, seniority_level } = req.body;
 
     if (question && useranswer) {
         const q = {
             userID,
             question,
             useranswer,
+            interview_type,
+            seniority_level,
             feedback: null,
-            seniority_level: null,
-            interview_type: null
         };
 
         questions[`${userID} + ${question}`] = q;
@@ -42,7 +46,14 @@ app.post('/sendq', async (req, res) => {
 
 async function req_gpt(q) {
     const struct = `[{title : "", rating: "", feedback:""},{idealAnswer:"provide correct answer here"}]`;
-    const prompt = `You are the strict interviewer. Question: ${q.question}\nAnswer: ${q.useranswer} Your task is to evaluate the interview answer based on Correctness. Rate based on a scale of 1 to 10, providing constructive feedback only provide it in this data structure ${struct}.`;
+    let prompt = null;
+    // Interview types//
+    if (q.interview_type === "Technical") {
+      prompt = `You are the strict interviewer. \nSeniority level: ${q.seniority_level}\nInterview_type: ${q.interview_type}\nQuestion: ${q.question}\nAnswer: ${q.useranswer} \nYour task is to evaluate the interview answer based on Correctness. Rate the user answer on a scale of 1 to 10, providing constructive feedback for each, provide ideal answer based you your feedback Make sure user is follwing STAR approach, only provide it in the following data stracture (JSON) ${struct}.`;
+    } else {
+      // Other
+      prompt = `You are the strict interviewer. \nSeniority level: ${q.seniority_level}\nInterview_type: ${q.interview_type}\nQuestion: ${q.question}\nAnswer: ${q.useranswer} \nYour task is to evaluate the interview answer based on Content, Clarity, Coherence, Confidence, Professionalism, Appropriateness, and Relevance. Rate each aspect on a scale of 1 to 10, providing constructive feedback for each, provide ideal answer based you your feedback Make sure user is follwing STAR approach, only provide it in the following data stracture (JSON) ${struct}.`;
+    }
 
     const headers = {
         "Authorization": `Bearer ${OPENAI_KEY}`,
@@ -59,7 +70,9 @@ async function req_gpt(q) {
     };
 
     try {
+        // console.log("asking question") // delete thiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis
         const response = await axios.post(OPENAI_URL, data, { headers });
+        // console.log(response.data.choices[0].message.content)
         q.feedback = response.data.choices[0].message.content;
     } catch (error) {
         console.error("Error calling OpenAI API:", error.response.data);
