@@ -57,10 +57,10 @@ async function req_feeback_gpt(q) {
     let prompt = null;
     // Interview types//
     if (q.interview_type === "Technical") {
-        prompt = `You are the strict interviewer. \nSeniority level: ${q.seniority_level}\nInterview_type: ${q.interview_type}\nQuestion: ${q.question}\nAnswer: ${q.useranswer} \nYour task is to evaluate the interview answer based on Correctness. Rate the user answer on a scale of 1 to 10, providing constructive feedback for each, provide ideal answer based you your feedback Make sure user is following STAR approach, only provide it in the following data structure (JSON) ${struct}.`;
+        prompt = `You are the strict interviewer. \nSeniority level: ${q.seniority_level}\nInterview_type: ${q.interview_type}\nQuestion: ${q.question}\nAnswer: ${q.useranswer} \nYour task is to evaluate the interview answer based on Correctness. Rate the user answer on a scale of 1 to 10, providing constructive feedback for each, provide ideal answer based you your feedback. Make sure user is following STAR approach. Strictly follow this data structure (JSON): ${struct}`;
     } else {
         // Other
-        prompt = `You are the strict interviewer. \nSeniority level: ${q.seniority_level}\nInterview_type: ${q.interview_type}\nQuestion: ${q.question}\nAnswer: ${q.useranswer} \nYour task is to evaluate the interview answer based on Content, Clarity, Coherence, Confidence, Professionalism, Appropriateness, and Relevance. Rate each aspect on a scale of 1 to 10, providing constructive feedback for each, provide ideal answer based you your feedback Make sure user is following STAR approach, only provide it in the following data structure (JSON) ${struct}.`;
+        prompt = `You are the strict interviewer. \nSeniority level: ${q.seniority_level}\nInterview_type: ${q.interview_type}\nQuestion: ${q.question}\nAnswer: ${q.useranswer} \nYour task is to evaluate the interview answer based on Content, Clarity, Coherence, Confidence, Professionalism, Appropriateness, and Relevance. Rate each aspect on a scale of 1 to 10, providing constructive feedback for each, provide ideal answer based you your feedback. Make sure user is following STAR approach. Strictly follow this data structure (JSON): ${struct}`;
     }
 
     const headers = {
@@ -93,8 +93,14 @@ app.post('/api/isfeedbackready', (req, res) => {
     const q = questions[`${userID} + ${question}`];
 
     if (q && q.feedback) {
-        res.status(201).json({ feedback: eval(`(${q.feedback})`)});
-        delete questions[`${userID} + ${question}`]; //? you gotta set up delete timeout in case we need to wait if there is another request for same user id and and question
+        try {
+            res.status(201).json({ feedback: eval(`(${q.feedback})`)});
+            delete questions[`${userID} + ${question}`]; //? you gotta set up delete timeout in case we need to wait if there is another request for same user id and and question
+        } catch (error) { // 500?
+            console.log(q.feedback)
+            res.status(500).json({ message: q.feedback});
+            delete questions[`${userID} + ${question}`];
+        }
     } else if (q && !q.feedback) {
         res.status(202).json({ message: "No feedback yet!" });
     } else {
